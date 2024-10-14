@@ -17,6 +17,7 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+router.get("/test", authHandlers.test)
 
 // Login or signup using phone number
 router.post("/login", authHandlers.login); // Use the handler directly

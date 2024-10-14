@@ -40,6 +40,9 @@ const authHandlers = {
       res.status(500).json({ message: "Server error" });
     }
   },
+  async test(req, res) {
+    res.json({ owner: "Harish", name: "Real time chat app", version: 1 });
+  },
 
   async refreshToken(req, res) {
     const { refreshToken } = req.body;
