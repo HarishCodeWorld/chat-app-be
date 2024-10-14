@@ -2,14 +2,15 @@ const Message = require("../models/Messages"); // Adjust the path as needed
 
 const saveMessage = async (data) => {
   try {
-    const { senderId, recipientId, content } = data;
+    const { senderId, recipientId, content, type } = data;
 
     // Create a new message document
     const newMessage = new Message({
       senderId,
       recipientId,
       content,
-    //   conversationId,
+      type,
+      //   conversationId,
     });
 
     // Save the message to the database

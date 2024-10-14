@@ -16,6 +16,10 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    type: {
+      type: String,
+      required: false,
+    },
     // conversationId: {
     //   type: String,
     //   required: true,

@@ -13,7 +13,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Adjust this to your frontend's origin if necessary
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -27,8 +27,6 @@ app.use("/api/auth", router);
 app.use("/api/chat", chatRoutes);
 app.use("/api/user", userRoutes);
 
-let users = {}; // Track users and their socket IDs
-
 // Connect to MongoDB
 mongoose
   .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -40,16 +38,13 @@ global.io = io;
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  // Listen for send_message event
   socket.on("send_message", async (data) => {
     console.log("send_message: ", { data });
 
     try {
-      // Save the message using the saveMessage function
       const savedMessage = await saveMessage(data);
 
-      // Broadcast the message to the intended recipient using the socket ID or conversation
-      io.emit(data.receiverNumber, data); // Emit to specific recipient (adjust as needed)
+      io.emit(data.receiverNumber, data);
 
       console.log("Message saved and broadcasted:", savedMessage);
     } catch (error) {
@@ -57,64 +52,33 @@ io.on("connection", (socket) => {
     }
   });
 
-  // video call 1.0
-  // socket.on("offer", (offer) => {
-  //   console.log("got offer..");
-  //   io.emit("offer", offer);
-  // });
-
-  // socket.on("answer", (answer) => {
-  //   io.emit("answer", answer);
-  // });
-
-  // socket.on("ice-candidate", (candidate) => {
-  //   io.emit("ice-candidate", candidate);
-  // });
-
-  // socket.on("disconnect", () => {
-  //   console.log("A user disconnected");
-  // });
-
-  // video 2.0
-  // Handle signaling data (offer, answer, and ICE candidates)
-  // socket.on("call-user", (data) => {
-  //   console.log({ data });
-  //   console.log("emitting to : ", `receive-call_${data.to}`);
-  //   io.emit(`receive-call_${data.to}`, { offer: data.offer, from: data.from });
-  // });
-
-  // socket.on("answer-call", (data) => {
-  //   io.emit(`call-answered_${data.to}`, {
-  //     answer: data.answer,
-  //     from: data.to,
-  //   });
-  // });
-
-  // socket.on("ice-candidate", (data) => {
-  //   io.emit("ice-candidate", {
-  //     candidate: data.candidate,
-  //     from: data.from,
-  //   });
-  // });
-
-  // socket.on("disconnect", () => {
-  //   console.log("User disconnected:", socket.id);
-  // });
-
-  socket.on("join", (userId) => {
-    users[userId] = socket.id;
+  socket.on("send_image", async (imageData) => {
+    try {
+      console.log("Image received", { imageData });
+      const savedMessage = await saveMessage(imageData);
+      console.log("Message saved and broadcasted:", savedMessage);
+      io.emit(`image_${imageData.receiverNumber}`, imageData);
+    } catch (error) {
+      console.error("Error handling Image:", error);
+    }
   });
 
-  socket.on("call-user", ({ to, offer }) => {
-    io.to(users[to]).emit("incoming-call", { from: socket.id, offer });
+  socket.on("typing", async (data) => {
+    try {
+      console.log("typing listen..");
+      io.emit(`typing_${data.receiverNumber}`, data);
+    } catch (err) {
+      console.error("Error handling Typing:", err);
+    }
   });
 
-  socket.on("answer-call", ({ to, answer }) => {
-    io.to(users[to]).emit("call-answered", { answer });
-  });
-
-  socket.on("disconnect", () => {
-    delete users[socket.id];
+  socket.on("stop_typing", async (data) => {
+    try {
+      console.log("stop_typing listen..", { data });
+      io.emit(`stop_typing_${data.receiverNumber}`, data);
+    } catch (err) {
+      console.error("Error handling Typing:", err);
+    }
   });
 });
 
